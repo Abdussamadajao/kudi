@@ -43,3 +43,4 @@ app-example
 /android
 
 /lib/generated/prisma
+.cursor/
