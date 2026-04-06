@@ -1,0 +1,6 @@
+import { EditProfileScreen } from "@/features/profile";
+import React from "react";
+
+export default function EditProfile() {
+  return <EditProfileScreen />;
+}

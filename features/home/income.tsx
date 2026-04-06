@@ -1,6 +1,8 @@
+﻿import Skeleton from "@/ui/skeleton";
 import { border, fonts, fontSize, spacing, ThemePalette } from "@/constants";
 import { formatPrice } from "@/lib/custom";
 import { useTheme } from "@/provider/theme-provider";
+import type { IncomeTransaction } from "@/types";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { ComponentProps, useMemo } from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -46,9 +48,13 @@ const INCOME_STREAMS: {
 const Income = ({
   label = "Income Streams",
   isLabel = true,
+  incomeTransactions,
+  isLoading = false,
 }: {
   label?: string;
   isLabel?: boolean;
+  incomeTransactions: IncomeTransaction[];
+  isLoading?: boolean;
 }) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -62,11 +68,23 @@ const Income = ({
         contentContainerStyle={styles.incomeStreamsScrollContent}
         style={styles.incomeStreamsScroll}
       >
-        {INCOME_STREAMS.map((stream) => {
-          const barTint =
-            stream.barColor === "income" ? colors.income : colors.expense;
-          return <Card key={stream.title} stream={stream} barTint={barTint} />;
-        })}
+        {isLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={`income-skeleton-${i}`} width={220} height={130} />
+            ))
+          : incomeTransactions.map((incomeTransaction) => {
+              const barTint =
+                incomeTransaction.type === "INCOME"
+                  ? colors.income
+                  : colors.expense;
+              return (
+                <Card
+                  key={incomeTransaction.id}
+                  incomeTransaction={incomeTransaction}
+                  barTint={barTint}
+                />
+              );
+            })}
       </ScrollView>
     </>
   );
@@ -75,10 +93,10 @@ const Income = ({
 export default Income;
 
 const Card = ({
-  stream,
+  incomeTransaction,
   barTint,
 }: {
-  stream: (typeof INCOME_STREAMS)[0];
+  incomeTransaction: IncomeTransaction;
   barTint: string;
 }) => {
   const { colors } = useTheme();
@@ -87,7 +105,7 @@ const Card = ({
   const incomeCardW = Math.min(268, Math.round(screenW * 0.72));
   return (
     <View
-      key={stream.title}
+      key={incomeTransaction.id}
       style={[
         styles.incomeStreamCard,
         {
@@ -96,24 +114,28 @@ const Card = ({
       ]}
     >
       <View style={styles.incomeStreamTop}>
-        <Text style={styles.incomeStreamLabel}>{stream.title}</Text>
-        <Text style={styles.incomeStreamTag}>{stream.tag}</Text>
+        <Text style={styles.incomeStreamLabel}>
+          {incomeTransaction.source_name}
+        </Text>
+        <Text style={styles.incomeStreamTag}>{incomeTransaction.tag}</Text>
       </View>
       <Text style={styles.incomeStreamAmount}>
-        {formatPrice(stream.amount)}
+        {formatPrice(Number(incomeTransaction.amount))}
       </Text>
       <View style={styles.incomeStreamMeta}>
         <Text style={styles.incomeStreamMetaText}>
-          {formatPrice(stream.remaining)} remaining
+          {formatPrice(incomeTransaction.summary.remaining)} remaining
         </Text>
-        <Text style={styles.incomeStreamMetaText}>{stream.percent}%</Text>
+        <Text style={styles.incomeStreamMetaText}>
+          {incomeTransaction.summary.percentage}%
+        </Text>
       </View>
       <View style={styles.incomeStreamTrack}>
         <View
           style={[
             styles.incomeStreamFill,
             {
-              width: `${stream.percent}%`,
+              width: `${incomeTransaction.summary.percentage}%`,
               backgroundColor: barTint,
             },
           ]}

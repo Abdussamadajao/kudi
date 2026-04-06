@@ -32,7 +32,7 @@ yarn-error.*
 
 # local env files
 .env*.local
-
+.cursorrules
 # typescript
 *.tsbuildinfo
 
@@ -41,3 +41,5 @@ app-example
 # generated native folders
 /ios
 /android
+
+/lib/generated/prisma

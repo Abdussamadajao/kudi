@@ -1,5 +1,5 @@
-import CreateModal from "@/components/create-modal";
-import { FABTab, TabItem } from "@/components/tab/custom-tab";
+﻿import CreateModal from "@/ui/create-modal";
+import { FABTab, TabItem } from "@/ui/navigation/custom-tab";
 import { border, ThemePalette } from "@/constants";
 import { useTheme } from "@/provider/theme-provider";
 import { Tabs } from "expo-router";
@@ -31,11 +31,11 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="transact"
+          name="transactions"
           options={{
             title: "Wallet",
             tabBarIcon: ({ color, focused }) => (
-              <TabItem name="transact" color={color} focused={focused} />
+              <TabItem name="transactions" color={color} focused={focused} />
             ),
           }}
         />

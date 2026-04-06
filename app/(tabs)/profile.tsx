@@ -1,22 +1,8 @@
-import { ThemePalette } from "@/constants";
-import { useTheme } from "@/provider/theme-provider";
-import React, { useMemo } from "react";
-import { StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ProfileScreen } from "@/features/profile";
+import React from "react";
 
 const Profile = () => {
-  const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <Text>profile</Text>
-    </SafeAreaView>
-  );
+  return <ProfileScreen />;
 };
 
-const createStyles = (palette: ThemePalette) => {
-  return StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: palette.background },
-  });
-};
 export default Profile;

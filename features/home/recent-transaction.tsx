@@ -1,3 +1,4 @@
+﻿import Skeleton from "@/ui/skeleton";
 import type { ThemePalette } from "@/constants";
 import { border, fonts, fontSize, spacing } from "@/constants/theme";
 import { formatPrice } from "@/lib/custom";
@@ -6,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { formatAmount } from "../transactions/transactions-utils";
 
 const DEBIT_AMOUNT = "#FB923C";
 
@@ -15,38 +17,19 @@ export type RecentTransactionRow = {
   subtitle: string;
   amount: number;
   icon: keyof typeof MaterialIcons.glyphMap;
+  iconBg: string;
+  isIncome: boolean;
+  iconType: "INCOME" | "EXPENSE";
 };
-
-const PLACEHOLDER_ITEMS: RecentTransactionRow[] = [
-  {
-    id: "1",
-    title: "Whole Foods Market",
-    subtitle: "Today • 2:45 PM",
-    amount: -42000,
-    icon: "shopping-cart",
-  },
-  {
-    id: "2",
-    title: "Monthly Salary",
-    subtitle: "Yesterday • 9:00 AM",
-    amount: 500000,
-    icon: "account-balance",
-  },
-  {
-    id: "3",
-    title: "Tesla Supercharger",
-    subtitle: "24 Oct • 8:12 PM",
-    amount: -8500,
-    icon: "directions-car",
-  },
-];
 
 type RecentTransactionsProps = {
   items?: RecentTransactionRow[];
+  isLoading?: boolean;
 };
 
 export function RecentTransactions({
-  items = PLACEHOLDER_ITEMS,
+  items = [],
+  isLoading = false,
 }: RecentTransactionsProps) {
   const { colors } = useTheme();
   const router = useRouter();
@@ -57,7 +40,7 @@ export function RecentTransactions({
       <View style={styles.header}>
         <Text style={styles.sectionTitle}>Recent Activity</Text>
         <Pressable
-          onPress={() => router.push("/transact")}
+          onPress={() => router.push("/transactions")}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="View all transactions"
@@ -67,45 +50,66 @@ export function RecentTransactions({
       </View>
 
       <View style={styles.list}>
-        {items.map((tx) => {
-          const isCredit = tx.amount >= 0;
-          const amountText = isCredit
-            ? `+${formatPrice(tx.amount)}`
-            : formatPrice(tx.amount);
-          return (
-            <View key={tx.id} style={styles.row}>
-              <View
-                style={[
-                  styles.iconCircle,
-                  { backgroundColor: colors.surfaceContainerHigh },
-                ]}
-              >
-                <MaterialIcons name={tx.icon} size={22} color={colors.icons} />
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <View key={`recent-skeleton-${i}`} style={styles.row}>
+                <Skeleton width={48} height={48} borderRadius={24} />
+                <View style={styles.middle}>
+                  <Skeleton width="60%" height={14} />
+                  <Skeleton width="40%" height={11} style={{ marginTop: 8 }} />
+                </View>
+                <View style={styles.right}>
+                  <Skeleton width={70} height={14} />
+                  <Skeleton width={40} height={10} style={{ marginTop: 8 }} />
+                </View>
               </View>
-              <View style={styles.middle}>
-                <Text style={styles.rowTitle} numberOfLines={1}>
-                  {tx.title}
-                </Text>
-                <Text style={styles.rowMeta} numberOfLines={1}>
-                  {tx.subtitle}
-                </Text>
-              </View>
-              <View style={styles.right}>
-                <Text
-                  style={[
-                    styles.amount,
-                    { color: isCredit ? colors.income : colors.expense },
-                  ]}
-                >
-                  {amountText}
-                </Text>
-                <Text style={styles.typeLabel}>
-                  {isCredit ? "CREDIT" : "DEBIT"}
-                </Text>
-              </View>
-            </View>
-          );
-        })}
+            ))
+          : items.map((tx) => {
+              const isCredit = tx.amount >= 0;
+              const amountText = isCredit
+                ? `+${formatPrice(tx.amount)}`
+                : formatPrice(tx.amount);
+              return (
+                <View key={tx.id} style={styles.row}>
+                  <View
+                    style={[
+                      styles.txIconWrap,
+                      { backgroundColor: tx.iconBg + "30" },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.txIconInner,
+                        { backgroundColor: tx.iconBg },
+                      ]}
+                    >
+                      <MaterialIcons name={tx.icon} size={18} color="#fff" />
+                    </View>
+                  </View>
+                  <View style={styles.middle}>
+                    <Text style={styles.rowTitle} numberOfLines={1}>
+                      {tx.title}
+                    </Text>
+                    <Text style={styles.rowMeta} numberOfLines={1}>
+                      {tx.subtitle}
+                    </Text>
+                  </View>
+                  <View style={styles.right}>
+                    <Text
+                      style={[
+                        styles.amount,
+                        { color: tx.isIncome ? colors.income : colors.expense },
+                      ]}
+                    >
+                      {formatAmount(tx.amount, tx.isIncome)}
+                    </Text>
+                    <Text style={styles.typeLabel}>
+                      {tx.isIncome ? "INCOME" : "EXPENSE"}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
       </View>
     </View>
   );
@@ -138,13 +142,20 @@ const createStyles = (colors: ThemePalette) =>
       flexDirection: "row",
       alignItems: "center",
     },
-    iconCircle: {
-      width: 48,
-      height: 48,
+    txIconWrap: {
+      width: 52,
+      height: 52,
       borderRadius: border.borderRadius.full,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: spacing[3],
+      marginRight: 12,
+    },
+    txIconInner: {
+      width: 42,
+      height: 42,
+      borderRadius: border.borderRadius.full,
+      alignItems: "center",
+      justifyContent: "center",
     },
     middle: {
       flex: 1,

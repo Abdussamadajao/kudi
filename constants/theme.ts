@@ -1,4 +1,15 @@
+import { Platform } from "react-native";
+
 export type ColorScheme = "light" | "dark";
+
+/** Shared KeyboardAvoidingView defaults (see app.json softwareKeyboardLayoutMode on Android). */
+export const keyboardAvoiding = {
+  behavior: Platform.select<"padding" | "height" | undefined>({
+    ios: "padding",
+    default: undefined,
+  }),
+  defaultVerticalOffset: 0,
+} as const;
 
 export type Scale = {
   [key: number]: string;
@@ -266,6 +277,17 @@ export const spacing = {
   12: 48,
   16: 64, // editorial top-margin for headlines
   20: 80,
+  24: 96,
+  32: 128,
+  40: 160,
+  48: 192,
+  56: 224,
+  64: 256,
+  72: 288,
+  80: 320,
+  88: 352,
+  96: 384,
+  104: 416,
 } as const;
 
 export const elevation = {

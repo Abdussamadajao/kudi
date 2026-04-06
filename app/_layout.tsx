@@ -1,11 +1,10 @@
+import Provider from "@/provider";
 import { ThemeProvider } from "@/provider/theme-provider";
-import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { useAuthStore } from "@/stores";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { router, useRootNavigationState, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import {
@@ -25,7 +24,9 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { isAuthenticated, isHydrated, hydrate } = useAuthStore();
+  const segments = useSegments();
+  const rootNavigationState = useRootNavigationState();
   const [fontsLoaded, fontError] = useFonts({
     "Manrope-ExtraLight": require("../assets/fonts/Manrope-ExtraLight.ttf"),
     "Manrope-Light": require("../assets/fonts/Manrope-Light.ttf"),
@@ -36,29 +37,39 @@ export default function RootLayout() {
     "Manrope-ExtraBold": require("../assets/fonts/Manrope-ExtraBold.ttf"),
   });
 
+  const appReady = (fontsLoaded || !!fontError) && isHydrated;
+
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      // Hide the splash screen once fonts are loaded or if there's an error
+    hydrate();
+  }, []);
+
+  useEffect(() => {
+    if (appReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [appReady]);
 
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+  useEffect(() => {
+    if (!appReady || !rootNavigationState?.key) return;
 
-  // If there's a font error, re-throw it to show the Expo error screen
-  if (fontError) {
-    throw fontError;
-  }
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!isAuthenticated && !inAuthGroup) {
+      router.replace("/(auth)/login");
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace("/(tabs)");
+    }
+  }, [appReady, isAuthenticated, rootNavigationState?.key, segments]);
+
+  if (fontError) throw fontError;
+
+  // ← keep splash visible until ready, render nothing in the meantime
+  if (!appReady) return null;
 
   return (
     <GestureHandlerRootView>
       <ThemeProvider>
-        <BottomSheetModalProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-        </BottomSheetModalProvider>
+        <Provider />
       </ThemeProvider>
     </GestureHandlerRootView>
   );
